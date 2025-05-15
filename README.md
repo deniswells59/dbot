@@ -1,51 +1,63 @@
-# Discord Hey Bot
+# Discord Music Bot
 
-A simple Discord bot that responds with "Hey!" when you use the `/hey` slash command.
+A Discord bot that plays YouTube audio in voice channels.
 
-## Setup Instructions
+## Features
 
-1. Install dependencies:
+- Play YouTube audio in voice channels
+- Queue system for multiple songs
+- Skip, stop, and queue management commands
+- Automatic playback of next song in queue
+
+## Commands
+
+- `/play [url]` - Play a YouTube video or add it to queue
+- `/stop` - Stop playing and clear the queue
+- `/skip` - Skip to the next song in queue
+- `/queue` - Show the current queue
+
+## Setup
+
+1. Clone this repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file with your Discord bot token:
+   ```
+   DISCORD_TOKEN=your_token_here
+   CLIENT_ID=your_client_id_here
+   ```
+
+## Deployment on Railway
+
+1. Create a [Railway](https://railway.app) account
+2. Fork this repository to your GitHub account
+3. Create a new project in Railway and connect it to your GitHub repository
+4. Add the following environment variables in Railway:
+   - `DISCORD_TOKEN`
+   - `CLIENT_ID`
+5. Deploy the project
+
+Railway will automatically:
+
+- Install dependencies
+- Run the bot using the Procfile
+- Keep the bot running 24/7
+
+## Development
+
+To run the bot locally:
 
 ```bash
-npm install
+npm run dev
 ```
 
-2. Create a `.env` file in the root directory and add your Discord bot token and client ID:
+This will start the bot with nodemon for automatic reloading during development.
 
-```
-DISCORD_TOKEN=your_discord_bot_token_here
-CLIENT_ID=your_application_client_id_here
-```
+## Requirements
 
-3. To get your Discord bot token and client ID:
-
-   - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-   - Create a new application
-   - Copy the "Application ID" (this is your CLIENT_ID)
-   - Go to the "Bot" section
-   - Click "Add Bot"
-   - Copy the token (this is your DISCORD_TOKEN)
-   - Under "Privileged Gateway Intents", make sure "SERVER MEMBERS INTENT" is enabled
-
-4. Invite the bot to your server:
-
-   - In the Developer Portal, go to "OAuth2" > "URL Generator"
-   - Select the following scopes:
-     - `bot`
-     - `applications.commands`
-   - Select the following bot permissions:
-     - `Send Messages`
-     - `Use Slash Commands`
-   - Copy the generated URL and open it in your browser to invite the bot
-
-5. Start the bot:
-
-```bash
-npm start
-```
-
-## Usage
-
-Type `/hey` in any channel where the bot has access, and it will respond with "Hey!"
-
-Note: After starting the bot for the first time, it may take a few minutes for the slash command to be registered and appear in Discord.
+- Node.js 16.x or higher
+- FFmpeg (installed automatically via ffmpeg-static)
+- Discord Bot Token
+- Discord Application Client ID

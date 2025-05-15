@@ -17,12 +17,15 @@ const {
 const ytdl = require('ytdl-core');
 require('dotenv').config();
 
+// Queue system - stores queues for each guild
+const queues = new Map();
+
 // Create a new client instance
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-// Create the slash command
+// Create the slash commands
 const commands = [
   new SlashCommandBuilder()
     .setName('play')
@@ -35,7 +38,95 @@ const commands = [
     .setName('stop')
     .setDescription('Stop playing and leave the voice channel')
     .toJSON(),
+  new SlashCommandBuilder().setName('skip').setDescription('Skip the current song').toJSON(),
+  new SlashCommandBuilder().setName('queue').setDescription('Show the current queue').toJSON(),
 ];
+
+// Function to play next song in queue
+async function playNext(guildId, interaction) {
+  const queue = queues.get(guildId);
+  if (!queue || queue.length === 0) {
+    const connection = getVoiceConnection(guildId);
+    if (connection) {
+      connection.destroy();
+    }
+    return;
+  }
+
+  const url = queue[0]; // Get the first song in queue
+  const connection = getVoiceConnection(guildId);
+
+  if (!connection) {
+    queues.delete(guildId);
+    return;
+  }
+
+  try {
+    // Create an audio player if it doesn't exist
+    let player = connection.state.subscription?.player;
+    if (!player) {
+      player = createAudioPlayer({
+        behaviors: {
+          noSubscriber: NoSubscriberBehavior.Play,
+        },
+      });
+
+      // Add error handling for the player
+      player.on('error', (error) => {
+        console.error('Error in audio player:', error);
+        interaction.channel.send('There was an error playing the audio!').catch(console.error);
+      });
+
+      // Add state change logging and handle next song
+      player.on('stateChange', (oldState, newState) => {
+        console.log(`Audio player state changed from ${oldState.status} to ${newState.status}`);
+        if (
+          newState.status === AudioPlayerStatus.Idle &&
+          oldState.status !== AudioPlayerStatus.Idle
+        ) {
+          // Remove the song that just finished
+          queue.shift();
+          // Play next song if there is one
+          playNext(guildId, interaction);
+        }
+      });
+
+      connection.subscribe(player);
+    }
+
+    // Get the audio stream
+    const stream = ytdl(url, {
+      filter: 'audioonly',
+      quality: 'highestaudio',
+      highWaterMark: 1 << 25,
+      requestOptions: {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+      },
+    });
+
+    // Create audio resource from the stream
+    const resource = createAudioResource(stream, {
+      inputType: 'webm/opus',
+      inlineVolume: true,
+    });
+
+    // Set a reasonable volume
+    if (resource.volume) {
+      resource.volume.setVolume(0.25);
+    }
+
+    // Play the audio
+    player.play(resource);
+  } catch (error) {
+    console.error('Error in playNext:', error);
+    queue.shift(); // Remove the problematic song
+    interaction.channel.send('Error playing the current song, skipping...').catch(console.error);
+    playNext(guildId, interaction); // Try playing the next song
+  }
+}
 
 // Register slash commands
 const rest = new REST().setToken(process.env.DISCORD_TOKEN);
@@ -76,9 +167,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return interaction.reply('Please provide a valid YouTube URL!');
       }
 
-      await interaction.reply(`Now playing: ${url}`);
+      // Get or create queue for this guild
+      if (!queues.has(interaction.guildId)) {
+        queues.set(interaction.guildId, []);
+      }
+      const queue = queues.get(interaction.guildId);
 
-      try {
+      // Add the URL to the queue
+      queue.push(url);
+
+      // If this is the first song, start playing
+      if (queue.length === 1) {
+        await interaction.reply(`Now playing: ${url}`);
+
         // Join the voice channel
         const connection = joinVoiceChannel({
           channelId: voiceChannel.id,
@@ -88,74 +189,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
           selfMute: false,
         });
 
-        // Create an audio player
-        const player = createAudioPlayer({
-          behaviors: {
-            noSubscriber: NoSubscriberBehavior.Play,
-          },
-        });
-
-        // Add error handling for the player
-        player.on('error', (error) => {
-          console.error('Error in audio player:', error);
-          interaction.followUp('There was an error playing the audio!').catch(console.error);
-        });
-
-        // Add state change logging
-        player.on('stateChange', (oldState, newState) => {
-          console.log(`Audio player state changed from ${oldState.status} to ${newState.status}`);
-          if (newState.status === AudioPlayerStatus.Idle) {
-            console.log('Playback finished, destroying connection');
-            connection.destroy();
-          }
-        });
-
-        // Subscribe the connection to the audio player
-        connection.subscribe(player);
-
-        // Get the audio stream
-        const stream = ytdl(url, {
-          filter: 'audioonly',
-          quality: 'highestaudio',
-          highWaterMark: 1 << 25, // 32MB buffer
-          requestOptions: {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            },
-          },
-        });
-
-        // Create audio resource from the stream
-        const resource = createAudioResource(stream, {
-          inputType: 'webm/opus',
-          inlineVolume: true,
-        });
-
-        // Set a reasonable volume
-        if (resource.volume) {
-          resource.volume.setVolume(0.5);
-        }
-
-        // Play the audio
-        player.play(resource);
-      } catch (error) {
-        console.error('Error in stream setup:', error);
-        let errorMessage = 'There was an error playing the audio!';
-
-        if (error.message?.includes('Could not extract')) {
-          errorMessage =
-            'Could not extract audio from this video. It might be restricted or unavailable.';
-        }
-
-        await interaction.followUp(errorMessage);
-        const connection = getVoiceConnection(interaction.guildId);
-        if (connection) {
-          connection.destroy();
-        }
+        // Start playing
+        playNext(interaction.guildId, interaction);
+      } else {
+        // If song was added to queue, show position
+        await interaction.reply(`Added to queue at position ${queue.length}`);
       }
     } catch (error) {
       console.error('Error in play command:', error);
+      await interaction.reply('There was an error executing the command!');
     }
   }
 
@@ -168,12 +210,59 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return interaction.reply("I'm not playing anything right now!");
       }
 
+      // Clear the queue
+      queues.delete(interaction.guildId);
+
       // Destroy the connection (this will also stop any playing audio)
       connection.destroy();
       await interaction.reply('Stopped playing and left the voice channel!');
     } catch (error) {
       console.error('Error stopping playback:', error);
       await interaction.reply('There was an error stopping the playback!');
+    }
+  }
+
+  if (interaction.commandName === 'skip') {
+    try {
+      const queue = queues.get(interaction.guildId);
+      if (!queue || queue.length === 0) {
+        return interaction.reply('No songs in the queue!');
+      }
+
+      const connection = getVoiceConnection(interaction.guildId);
+      if (!connection) {
+        return interaction.reply("I'm not playing anything right now!");
+      }
+
+      // Get the player
+      const player = connection.state.subscription?.player;
+      if (player) {
+        // Stop the current song, which will trigger the 'idle' state
+        // and automatically play the next song
+        player.stop();
+        await interaction.reply('Skipped to the next song!');
+      } else {
+        await interaction.reply('No audio player found!');
+      }
+    } catch (error) {
+      console.error('Error skipping song:', error);
+      await interaction.reply('There was an error skipping the song!');
+    }
+  }
+
+  if (interaction.commandName === 'queue') {
+    try {
+      const queue = queues.get(interaction.guildId);
+      if (!queue || queue.length === 0) {
+        return interaction.reply('No songs in the queue!');
+      }
+
+      const queueList = queue.map((url, index) => `${index + 1}. ${url}`).join('\n');
+
+      await interaction.reply(`Current queue:\n${queueList}`);
+    } catch (error) {
+      console.error('Error showing queue:', error);
+      await interaction.reply('There was an error showing the queue!');
     }
   }
 });
