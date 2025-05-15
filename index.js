@@ -115,7 +115,7 @@ async function playNext(guildId, interaction) {
 
     // Set a reasonable volume
     if (resource.volume) {
-      resource.volume.setVolume(0.25);
+      resource.volume.setVolume(0.4);
     }
 
     // Play the audio
