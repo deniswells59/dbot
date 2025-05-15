@@ -16,7 +16,7 @@ A Discord bot that plays YouTube audio in voice channels.
 - `/skip` - Skip to the next song in queue
 - `/queue` - Show the current queue
 
-## Setup
+## Local Setup
 
 1. Clone this repository
 2. Install dependencies:
@@ -31,19 +31,36 @@ A Discord bot that plays YouTube audio in voice channels.
 
 ## Deployment on Railway
 
-1. Create a [Railway](https://railway.app) account
-2. Fork this repository to your GitHub account
-3. Create a new project in Railway and connect it to your GitHub repository
-4. Add the following environment variables in Railway:
-   - `DISCORD_TOKEN`
-   - `CLIENT_ID`
-5. Deploy the project
+1. Fork this repository to your GitHub account
 
-Railway will automatically:
+2. Create a [Railway](https://railway.app) account
 
-- Install dependencies
-- Run the bot using the Procfile
-- Keep the bot running 24/7
+   - Sign up with your GitHub account
+   - Choose the free plan (500 hours/month)
+
+3. Create a new project in Railway:
+
+   - Click "New Project"
+   - Select "Deploy from GitHub repo"
+   - Choose your forked repository
+   - Railway will automatically detect the Procfile and Node.js setup
+
+4. Add environment variables in Railway:
+
+   - Go to your project's "Variables" tab
+   - Add the following variables:
+     - `DISCORD_TOKEN` (your Discord bot token)
+     - `CLIENT_ID` (your Discord application client ID)
+
+5. Deploy:
+   - Railway will automatically deploy your bot
+   - Each push to main will trigger a new deployment
+
+## Monitoring
+
+- View logs in Railway's "Deployments" tab
+- Check CPU and memory usage in "Metrics"
+- Set up notifications for deployment failures
 
 ## Development
 
@@ -61,3 +78,12 @@ This will start the bot with nodemon for automatic reloading during development.
 - FFmpeg (installed automatically via ffmpeg-static)
 - Discord Bot Token
 - Discord Application Client ID
+
+## Troubleshooting
+
+If the bot goes offline:
+
+1. Check Railway logs for errors
+2. Verify environment variables are set
+3. Check if you've exceeded free tier limits
+4. Ensure your Discord token is valid
