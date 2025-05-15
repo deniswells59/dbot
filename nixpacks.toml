@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs', 'python3', 'gcc', 'ffmpeg']
+nixPkgs = ['nodejs', 'python3', 'gcc', 'ffmpeg', 'pkg-config', 'make', 'autoconf', 'automake', 'libtool']
 
 [start]
 cmd = "node index.js"
