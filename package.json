@@ -11,11 +11,13 @@
     "node": ">=16.x"
   },
   "dependencies": {
+    "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.16.1",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "ffmpeg-static": "^5.2.0",
-    "ytdl-core": "^4.11.5"
+    "libsodium-wrappers": "^0.7.15",
+    "ytdl-core": "npm:@distube/ytdl-core@^4.16.10"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
