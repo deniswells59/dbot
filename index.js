@@ -14,28 +14,12 @@ const {
   getVoiceConnection,
   AudioPlayerStatus,
 } = require('@discordjs/voice');
-const play = require('play-dl');
+const ytdl = require('ytdl-core');
 require('dotenv').config();
-
-// Setup play-dl with YouTube and check authentication
-(async () => {
-  try {
-    await play.setToken({
-      youtube: {
-        cookie: process.env.YOUTUBE_COOKIE,
-      },
-    });
-  } catch (error) {
-    console.error('Error setting up YouTube authentication:', error);
-  }
-})();
 
 // Create a new client instance
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates, // Add voice states intent
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 // Create the slash command
@@ -59,12 +43,10 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
-
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-
     console.log('Successfully reloaded application (/) commands.');
   } catch (error) {
-    console.error('@@@ ERROR registering slash commands', error);
+    console.error('Error registering slash commands:', error);
   }
 })();
 
@@ -90,58 +72,63 @@ client.on(Events.InteractionCreate, async (interaction) => {
       console.log('Attempting to play URL:', url);
 
       // Validate the URL
-      const validUrl = await play.yt_validate(url);
-
-      if (!validUrl) {
+      if (!ytdl.validateURL(url)) {
         return interaction.reply('Please provide a valid YouTube URL!');
       }
 
-      await interaction.reply(`Joining voice channel and attempting to play: ${url}`);
-
-      // Join the voice channel
-      const connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: voiceChannel.guild.id,
-        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-        selfDeaf: false,
-        selfMute: false,
-      });
-
-      // Create an audio player
-      const player = createAudioPlayer({
-        behaviors: {
-          noSubscriber: NoSubscriberBehavior.Play,
-        },
-      });
-
-      // Add error handling for the player
-      player.on('error', (error) => {
-        console.error('Error in audio player:', error);
-        interaction.followUp('There was an error playing the audio!').catch(console.error);
-      });
-
-      // Add state change logging
-      player.on('stateChange', (oldState, newState) => {
-        console.log(`Audio player state changed from ${oldState.status} to ${newState.status}`);
-        if (newState.status === AudioPlayerStatus.Idle) {
-          console.log('Playback finished, destroying connection');
-          connection.destroy();
-        }
-      });
-
-      // Subscribe the connection to the audio player
-      connection.subscribe(player);
+      await interaction.reply(`Now playing: ${url}`);
 
       try {
-        // Get YouTube stream with specific quality
-        const stream = await play.stream(url, {
-          discordPlayerCompatibility: true,
-          quality: 2, // Set quality to a lower value for better compatibility
+        // Join the voice channel
+        const connection = joinVoiceChannel({
+          channelId: voiceChannel.id,
+          guildId: voiceChannel.guild.id,
+          adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+          selfDeaf: false,
+          selfMute: false,
+        });
+
+        // Create an audio player
+        const player = createAudioPlayer({
+          behaviors: {
+            noSubscriber: NoSubscriberBehavior.Play,
+          },
+        });
+
+        // Add error handling for the player
+        player.on('error', (error) => {
+          console.error('Error in audio player:', error);
+          interaction.followUp('There was an error playing the audio!').catch(console.error);
+        });
+
+        // Add state change logging
+        player.on('stateChange', (oldState, newState) => {
+          console.log(`Audio player state changed from ${oldState.status} to ${newState.status}`);
+          if (newState.status === AudioPlayerStatus.Idle) {
+            console.log('Playback finished, destroying connection');
+            connection.destroy();
+          }
+        });
+
+        // Subscribe the connection to the audio player
+        connection.subscribe(player);
+
+        // Get the audio stream
+        const stream = ytdl(url, {
+          filter: 'audioonly',
+          quality: 'highestaudio',
+          highWaterMark: 1 << 25, // 32MB buffer
+          requestOptions: {
+            headers: {
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+          },
         });
 
         // Create audio resource from the stream
-        const resource = createAudioResource(stream.stream, {
-          inputType: stream.type,
+        const resource = createAudioResource(stream, {
+          inputType: 'webm/opus',
           inlineVolume: true,
         });
 
@@ -154,12 +141,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
         player.play(resource);
       } catch (error) {
         console.error('Error in stream setup:', error);
-        await interaction.followUp('There was an error playing the audio!');
-        connection.destroy();
+        let errorMessage = 'There was an error playing the audio!';
+
+        if (error.message?.includes('Could not extract')) {
+          errorMessage =
+            'Could not extract audio from this video. It might be restricted or unavailable.';
+        }
+
+        await interaction.followUp(errorMessage);
+        const connection = getVoiceConnection(interaction.guildId);
+        if (connection) {
+          connection.destroy();
+        }
       }
     } catch (error) {
       console.error('Error in play command:', error);
-      await interaction.reply('There was an error executing the command!');
     }
   }
 

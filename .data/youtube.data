@@ -15,12 +15,19 @@
         "__Secure-1PSID": "g.a000wghWMgJJw9JVdHex6KuwZgSQfzTKQgB0ms87B91JvMKJmQS3SDBibbbiV-Q_tGXPSaeynwACgYKAcYSARYSFQHGX2MiQs0QWRiCRF78wmJInAHUvRoVAUF8yKrt_kiZJcEBmyswS9lBcUhk0076",
         "__Secure-3PSID": "g.a000wghWMgJJw9JVdHex6KuwZgSQfzTKQgB0ms87B91JvMKJmQS3pid5HUZFRCbll-2mA9PBIwACgYKAVoSARYSFQHGX2Miszq3aAtES--yzzQ6iP4hkxoVAUF8yKoqHsFqrn8bh2APZXhPpgVi0076",
         "__Secure-ROLLOUT_TOKEN": "CLqh2caD3ZWMtgEQ3cG74b61jAMYro-11sqjjQM%3D",
-        "__Secure-1PSIDTS": "sidts-CjEBjplskBZ_a2T2QMvzQ0JWOzH1kSPKWRsbhzVOaB-NKeSd8QP9VhSFUi1k-5TKInOYEAA",
-        "__Secure-3PSIDTS": "sidts-CjEBjplskBZ_a2T2QMvzQ0JWOzH1kSPKWRsbhzVOaB-NKeSd8QP9VhSFUi1k-5TKInOYEAA",
-        "ST-amrb2j": "session_logininfo=AFmmF2swRgIhALNPAXc8djMGYJoFoV77vlxiS74s5yp8kHoMXnDRFXwuAiEAwnh-ddKLovHeWfcQk1LU9rnfBvZWvskqLLOzmaHLPvc%3AQUQ3MjNmelZScmg5QWxEUlJ0MTRNNEhEQmotbHkwczBEWXhNRnlSbnVOSmVrTS1XTm4tZzR5M05OZmJoeExrV3lhUlNaMGRSVjdfdU5ITlFYUkRnbDFVTVhjT19MaFB4UjZWNU56alpJcHlOblo2SmwzcXFBeTl4dVFXUDdDRUhqT01IblZPWE9relc5NEJ2SWpXa3ByNGVoak91dG05WlZn",
-        "ST-xuwub9": "session_logininfo=AFmmF2swRgIhALNPAXc8djMGYJoFoV77vlxiS74s5yp8kHoMXnDRFXwuAiEAwnh-ddKLovHeWfcQk1LU9rnfBvZWvskqLLOzmaHLPvc%3AQUQ3MjNmelZScmg5QWxEUlJ0MTRNNEhEQmotbHkwczBEWXhNRnlSbnVOSmVrTS1XTm4tZzR5M05OZmJoeExrV3lhUlNaMGRSVjdfdU5ITlFYUkRnbDFVTVhjT19MaFB4UjZWNU56alpJcHlOblo2SmwzcXFBeTl4dVFXUDdDRUhqT01IblZPWE9relc5NEJ2SWpXa3ByNGVoak91dG05WlZn",
-        "SIDCC": "AKEyXzUNLVaq7IF4crK2pyzWj720mJoTnKDxFL1NoLKC0MKEZn7401sBT-an95xBHp2LH8iYcLom",
-        "__Secure-1PSIDCC": "AKEyXzU09WFjuMdlj6TqrI1HhCD0hzN2G9cUYqzs3a1IFtelqna42lUkwK0TJ5837krh2wzAtSg",
-        "__Secure-3PSIDCC": "AKEyXzWTlVxAqfHfeoQYxYWfNPePvOAwREEBAwCZmua-4PWkiImREVOzfRhLPkl2jq9DxpQa3PCX"
-    }
+        "__Secure-1PSIDTS": "sidts-CjEBjplskMCwaLYieK4rRF5uhOrJspAElw-oF2b0wj8x4ZUdiZfyJPphCavODViC4O8REAA",
+        "__Secure-3PSIDTS": "sidts-CjEBjplskMCwaLYieK4rRF5uhOrJspAElw-oF2b0wj8x4ZUdiZfyJPphCavODViC4O8REAA",
+        "SIDCC": "AKEyXzX23z-32_dr0BfLHcD3Uk_tZmBWBTdXXIHTyYjTwaXpp-IYGLmNB6mE0OMGk0doKeoQaHrl",
+        "__Secure-1PSIDCC": "AKEyXzUPqnXcqp7YTlPoOyIjuMDkk9U2DD8FEAqEOk7hiLh0EQNdY6dHiXIlZM4ry8ErnUW0UAM",
+        "__Secure-3PSIDCC": "AKEyXzW2aajwOfOBA2Fo_yZ6VDjcl1XjllOTK8DoGGVzUTm6UlqGrCK_qM_FeBQ_tZYY1amRXTMA",
+        "Domain": ".youtube.com",
+        "Expires": "Tue, 11-Nov-2025 00:58:12 GMT",
+        "Path": "/",
+        "SameSite": "none",
+        "expires": "Fri, 15-May-2026 00:58:12 GMT",
+        "path": "/",
+        "domain": ".youtube.com",
+        "priority": "high"
+    },
+    "file": true
 }
